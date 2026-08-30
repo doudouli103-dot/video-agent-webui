@@ -24,7 +24,8 @@ Create a video:
 browser
   -> video-agent-webui
       -> video-agent /api/v1/videos
-          -> tenx-ai-gateway for script and speech
+          -> tenx-ai-gateway for script
+          -> tenx-ai-tts-adapter for speech
           -> tenx-ai-media-service for image/video generation
           -> local FFmpeg for final.mp4 when local shot videos exist
 ```
@@ -111,8 +112,10 @@ export AI_GATEWAY_BASE_URL=http://127.0.0.1:8088/v1
 export AI_GATEWAY_API_KEY=local-dev-key
 export TENX_AI_MEDIA_BASE_URL=http://127.0.0.1:8092/api/v1
 export TENX_AI_MEDIA_API_KEY=local-dev-key
+export TTS_ADAPTER_BASE_URL=http://127.0.0.1:4030/v1
+export TTS_ADAPTER_API_KEY=local-dev-key
 export VIDEO_AGENT_ENABLE_REMOTE_MEDIA=true
-export VIDEO_AGENT_ENABLE_GATEWAY_TTS=true
+export VIDEO_AGENT_ENABLE_TTS_ADAPTER=true
 export VIDEO_AGENT_SPEECH_MODEL=cosyvoice
 export VIDEO_AGENT_SPEECH_VOICE=default
 ```
