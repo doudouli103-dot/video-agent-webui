@@ -12,6 +12,47 @@ Separated frontend for VideoAgent.
 - Download local prompt and manifest artifacts.
 - Configure backend API base URL in the page.
 
+## Project Role
+
+`video-agent-webui` is the separated frontend for `video-agent`. It does not call `tenx-ai-gateway`, `tenx-ai-media-service`, or `tenx-ai-tts-adapter` directly. All generation requests go through the `video-agent` backend.
+
+## Calling Chains
+
+Create a video:
+
+```text
+browser
+  -> video-agent-webui
+      -> video-agent /api/v1/videos
+          -> tenx-ai-gateway for script and speech
+          -> tenx-ai-media-service for image/video generation
+          -> local FFmpeg for final.mp4 when local shot videos exist
+```
+
+Generate one image:
+
+```text
+browser
+  -> video-agent-webui
+      -> video-agent /api/v1/images
+          -> tenx-ai-media-service /api/v1/images/generations when remote media is enabled
+          -> local prompt artifact when remote media is disabled
+```
+
+Download media:
+
+```text
+Remote generated image/video:
+browser
+  -> video-agent-webui
+      -> opens URL returned by tenx-ai-media-service /api/v1/assets/<file_id>
+
+Local project artifacts:
+browser
+  -> video-agent-webui
+      -> video-agent /api/v1/artifacts/<relative_storage_path>
+```
+
 ## Start
 
 For local mock generation, start only these two projects:
@@ -24,10 +65,11 @@ For local mock generation, start only these two projects:
 For real image/video generation, start dependencies first:
 
 ```text
-1. tenx-ai-gateway
-2. tenx-ai-media-service
-3. video-agent
-4. video-agent-webui
+1. tenx-ai-tts-adapter
+2. tenx-ai-gateway
+3. tenx-ai-media-service
+4. video-agent
+5. video-agent-webui
 ```
 
 ## Start 1: video-agent
@@ -70,6 +112,9 @@ export AI_GATEWAY_API_KEY=local-dev-key
 export TENX_AI_MEDIA_BASE_URL=http://127.0.0.1:8092/api/v1
 export TENX_AI_MEDIA_API_KEY=local-dev-key
 export VIDEO_AGENT_ENABLE_REMOTE_MEDIA=true
+export VIDEO_AGENT_ENABLE_GATEWAY_TTS=true
+export VIDEO_AGENT_SPEECH_MODEL=cosyvoice
+export VIDEO_AGENT_SPEECH_VOICE=default
 ```
 
 ## Build
