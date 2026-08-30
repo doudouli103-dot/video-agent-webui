@@ -16,6 +16,15 @@ Separated frontend for VideoAgent.
 
 `video-agent-webui` is the separated frontend for `video-agent`. It does not call `tenx-ai-gateway`, `tenx-ai-media-service`, or `tenx-ai-tts-adapter` directly. All generation requests go through the `video-agent` backend.
 
+Frontend boundary:
+
+```text
+video-agent-webui
+  -> video-agent only
+```
+
+Backend dependencies are configured on `video-agent`, not inside this WebUI.
+
 ## Calling Chains
 
 Create a video:
