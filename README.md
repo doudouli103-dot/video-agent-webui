@@ -7,6 +7,7 @@ Separated frontend for VideoAgent.
 - Generate an image through `video-agent` API.
 - Create a video generation task through `video-agent` API.
 - Poll video task status.
+- Retry failed video tasks through `video-agent`.
 - View task metadata, script/storyboard, and output manifest.
 - Open and download generated image/video URLs.
 - Download local prompt and manifest artifacts.

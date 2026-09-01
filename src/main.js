@@ -13,6 +13,8 @@ const state = {
   imageResult: null,
   loading: false,
   error: "",
+  retrying: false,
+  pollToken: 0,
 };
 
 const app = document.querySelector("#app");
@@ -126,6 +128,9 @@ function render() {
           <div class="section-head">
             <h2>详情</h2>
             <div class="actions">
+              <button class="ghost" type="button" id="retryTask" ${canRetrySelectedTask() ? "" : "disabled"}>
+                ${state.retrying ? "重试中" : "重试"}
+              </button>
               <button class="ghost" type="button" id="loadScript" ${state.selectedTaskId ? "" : "disabled"}>脚本</button>
               <button class="ghost" type="button" id="loadManifest" ${state.selectedTaskId ? "" : "disabled"}>Manifest</button>
             </div>
@@ -194,6 +199,8 @@ function renderDetails() {
         <div><span>任务 ID</span><strong>${escapeHtml(state.selectedTask.id)}</strong></div>
         <div><span>状态</span><strong>${escapeHtml(state.selectedTask.status)}</strong></div>
         <div><span>进度</span><strong>${state.selectedTask.progress}%</strong></div>
+        <div><span>创建时间</span><strong>${escapeHtml(formatTime(state.selectedTask.created_at))}</strong></div>
+        <div><span>更新时间</span><strong>${escapeHtml(formatTime(state.selectedTask.updated_at))}</strong></div>
         <div>
           <span>输出</span>
           <strong>
@@ -283,6 +290,7 @@ function bindEvents() {
   });
 
   document.querySelector("#refreshTasks")?.addEventListener("click", loadTasks);
+  document.querySelector("#retryTask")?.addEventListener("click", retryTask);
   document.querySelector("#loadScript")?.addEventListener("click", loadScript);
   document.querySelector("#loadManifest")?.addEventListener("click", loadManifest);
 
@@ -291,6 +299,7 @@ function bindEvents() {
       state.selectedTaskId = button.dataset.taskId;
       state.script = null;
       state.manifest = null;
+      state.pollToken += 1;
       await loadTask(state.selectedTaskId);
     });
   });
@@ -362,16 +371,58 @@ async function loadManifest() {
 }
 
 async function pollTask(taskId) {
+  const token = (state.pollToken += 1);
   for (let index = 0; index < 240; index += 1) {
     await wait(2000);
-    const task = await getJson(`/videos/${encodeURIComponent(taskId)}`);
-    state.selectedTask = task;
-    state.tasks = state.tasks.map((item) => (item.id === task.id ? task : item));
-    render();
-    if (task.status === "COMPLETED" || task.status === "FAILED") {
+    if (token !== state.pollToken) {
+      return;
+    }
+    try {
+      const task = await getJson(`/videos/${encodeURIComponent(taskId)}`);
+      if (token !== state.pollToken) {
+        return;
+      }
+      state.selectedTask = task;
+      state.tasks = state.tasks.map((item) => (item.id === task.id ? task : item));
+      render();
+      if (task.status === "COMPLETED" || task.status === "FAILED") {
+        return;
+      }
+    } catch (error) {
+      if (token !== state.pollToken) {
+        return;
+      }
+      state.error = error.message || String(error);
+      render();
       return;
     }
   }
+}
+
+async function retryTask() {
+  if (!canRetrySelectedTask()) {
+    return;
+  }
+  state.retrying = true;
+  state.error = "";
+  render();
+  try {
+    const task = await postJson(`/videos/${encodeURIComponent(state.selectedTaskId)}/retry`, {});
+    state.selectedTask = task;
+    state.tasks = state.tasks.map((item) => (item.id === task.id ? task : item));
+    state.script = null;
+    state.manifest = null;
+    pollTask(task.id);
+  } catch (error) {
+    state.error = error.message || String(error);
+  } finally {
+    state.retrying = false;
+    render();
+  }
+}
+
+function canRetrySelectedTask() {
+  return state.selectedTaskId && state.selectedTask?.status === "FAILED" && !state.retrying;
 }
 
 async function withLoading(action) {
@@ -436,6 +487,17 @@ function artifactUrlFromPath(path) {
     return apiUrl(`/artifacts/${normalized.slice("storage/".length)}`);
   }
   return "";
+}
+
+function formatTime(value) {
+  if (!value) {
+    return "-";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString();
 }
 
 function escapeHtml(value) {
