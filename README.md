@@ -109,20 +109,32 @@ Open:
 http://127.0.0.1:5174
 ```
 
+On Windows LAN deployment, open:
+
+```text
+http://windows.tentest.cn:5174
+```
+
 Default backend API:
 
 ```text
 http://127.0.0.1:8090/api/v1
 ```
 
+For Windows deployment, use `.env.windows.example` or set:
+
+```bash
+VITE_VIDEO_AGENT_API_BASE_URL=http://windows.tentest.cn:8090/api/v1 npm run dev
+```
+
 For real media generation, configure the backend environment:
 
 ```bash
-export AI_GATEWAY_BASE_URL=http://127.0.0.1:8088/v1
+export AI_GATEWAY_BASE_URL=http://macstudio.tentest.cn:8088/v1
 export AI_GATEWAY_API_KEY=local-dev-key
-export TENX_AI_MEDIA_BASE_URL=http://127.0.0.1:8092/api/v1
+export TENX_AI_MEDIA_BASE_URL=http://windows.tentest.cn:8092/api/v1
 export TENX_AI_MEDIA_API_KEY=local-dev-key
-export TTS_ADAPTER_BASE_URL=http://127.0.0.1:4030/v1
+export TTS_ADAPTER_BASE_URL=http://macstudio.tentest.cn:4030/v1
 export TTS_ADAPTER_API_KEY=local-dev-key
 export VIDEO_AGENT_ENABLE_REMOTE_MEDIA=true
 export VIDEO_AGENT_ENABLE_TTS_ADAPTER=true
